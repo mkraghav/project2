@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disable scroll chaining on fixed position element</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+html {
+  --header-height: 60px;
+}
+html, body {
+  font-family: "Open Sans", sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  background: #fafafa;
+  margin: 0;
+  overscroll-behavior-y: contain; /* disable pull to refresh, keeps glow effects */
+}
+h1, h2, h3 {
+  margin: 0;
+  font-weight: inherit;
+}
+header {
+  padding: 0 8px;
+  background: #f44336;
+  color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#inbox {
+  padding-top: var(--header-height); /* height of header */
+}
+chat-window {
+  position: fixed;
+  bottom: 0;
+  right: 16px;
+}
+section {
+  counter-reset: email;
+}
+section div {
+  margin: 0;
+  padding: 16px 8px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+}
+section .label::after {
+  counter-increment: email;
+  content: counter(email);
+  margin-left: 8px;
+}
+body.refreshing #inbox,
+body.refreshing header {
+  filter: blur(1px);
+  touch-action: none; /* prevent scrolling */
+}
+body.refreshing .refresher {
+  transform: translate3d(0,150%,0) scale(1);
+  z-index: 1;
+  visibility: visible;
+}
+.refresher {
+  pointer-events: none;
+  --refresh-width: 55px;
+  background: #fff;
+  width: var(--refresh-width);
+  height: var(--refresh-width);
+  border-radius: 50%; 
+  position: absolute;
+  left: calc(50% - var(--refresh-width) / 2);
+  padding: 8px;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+              0 1px 5px 0 rgba(0, 0, 0, 0.12),
+              0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  transition: all 300ms cubic-bezier(0,0,0.2,1);
+  will-change: transform, opacity;
+  display: inline-flex;
+  justify-content: space-evenly;
+  align-items: center;
+  visibility: hidden;
+}
+body.refreshing .refresher.shrink {
+  transform: translate3d(0,150%,0) scale(0);
+  opacity: 0;
+}
+.refresher.done {
+  transition: none;
+}
+.loading-bar {
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+  animation: loading 1s ease-in-out infinite;
+}
+.loading-bar:nth-child(1) {
+  background-color: #3498db;
+  animation-delay: 0;
+}
+.loading-bar:nth-child(2) {
+  background-color: #c0392b;
+  animation-delay: 0.09s;
+}
+.loading-bar:nth-child(3) {
+  background-color: #f1c40f;
+  animation-delay: .18s;
+}
+.loading-bar:nth-child(4) {
+  background-color: #27ae60;
+  animation-delay: .27s;
+}
+
+  
+}
+</style>
+
+</head>
+<body>
+
+<main>
+  <header>
+    <div>
+      <h2>Your Health+ live chat</h2>
+    </div>
+  </header>
+
+  <section id="inbox">
+    <!-- filled dynamically -->
+  </section>
+  
+  <chat-window title="Chat with Eric Bidelman" open>
+  
+   
+    
+  </chat-window>
+</main>
+
+<template id="chat-window-template">
+  <style>
+    :host {
+      display: block;
+      max-width: 250px;
+      background: #fff;
+      contain: content;
+    }
+    :host([open]) .msgs {
+      display: flex;
+    }
+    .toolbar {
+      padding: 8px;
+     background-image: url('https://hdqwalls.com/download/landscape-hot-air-balloon-dm-2048x1152.jpg');
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toolbar #title {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .toolbar #close {
+      font-size: inherit;
+      background: none;
+      border: none;
+      color: inherit;
+    }
+    .msgs {
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      height: 300px;
+      overflow: auto;
+      overscroll-behavior-y: contain;
+    }
+    ::slotted(.msg) {
+      padding: 8px 16px;
+      margin: 8px;
+      border-radius: 5px;
+      background-color: #eee;
+    }
+    ::slotted(.msg:nth-child(even)) {
+      align-self: flex-end;
+    }
+    #input-container {
+      border: 1px solid #ccc;
+      border-top: 1px solid #aaa;
+    }
+    #input-container input {
+      padding: 8px;
+      font-size: inherit;
+      width: 100%;
+      height: 100%;
+      border: none;
+      box-sizing: border-box;
+    }
+    .msgs-container {
+      display: none;
+    }
+    :host([open]) .msgs-container {
+      display: block;
+    }
+  </style>
+  <div class="toolbar">
+    <span id="title"></span>
+    <button id="close">𝘅</button> 
+  </div>
+  <div class="msgs-container">
+    <div class="msgs">
+      <slot></slot>
+    </div>
+    <div id="input-container">
+      <input type="text" placeholder="Enter text">
+    </div>
+  </div>
+</template>
+
+
+<script src="https://uhchat.net/code.php?f=904f2f"></script>
+</body>
+<style type="text/css">
+
+body{
+  background-image: url('https://hdqwalls.com/download/landscape-hot-air-balloon-dm-2048x1152.jpg');
+  background-size: cover;
+ }</style></body>
+</html>
